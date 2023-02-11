@@ -5,8 +5,6 @@ VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Importer2Web", "Importer2Web\Importer2Web.csproj", "{71DA443A-B0B3-4EAF-8484-8E55D5EEE337}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibMsacServer", "MsacServer\LibMsacServer\LibMsacServer.csproj", "{46626E6F-D14F-48AE-9F79-D7F1016FDB9D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{71DA443A-B0B3-4EAF-8484-8E55D5EEE337}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71DA443A-B0B3-4EAF-8484-8E55D5EEE337}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71DA443A-B0B3-4EAF-8484-8E55D5EEE337}.Release|Any CPU.Build.0 = Release|Any CPU
-		{46626E6F-D14F-48AE-9F79-D7F1016FDB9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{46626E6F-D14F-48AE-9F79-D7F1016FDB9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{46626E6F-D14F-48AE-9F79-D7F1016FDB9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{46626E6F-D14F-48AE-9F79-D7F1016FDB9D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

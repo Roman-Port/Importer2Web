@@ -1,11 +1,12 @@
-﻿using Importer2Web.Properties;
-using LibMsacServer;
+﻿using Importer2Web.Images;
+using Importer2Web.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -24,6 +25,10 @@ namespace Importer2Web
         }
 
         private readonly MsacConfigFile configFile;
+
+        private WebImageStore assetStore;
+        private IWebImageCategory assetStoreIcons;
+        private IWebImageCategory assetStoreCache;
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -49,6 +54,11 @@ namespace Importer2Web
                 return;
             }
 
+            //Set up the image store
+            assetStore = new WebImageStore(new DirectoryInfo(configFile.SystemConfig.WebDirectory), configFile.SystemConfig.PublicUrl);
+            assetStoreIcons = assetStore.GetCategory("default");
+            assetStoreCache = assetStore.GetCategory("cache");
+
             //Clear
             tableLayoutPanel1.RowStyles.Clear();
 
@@ -56,7 +66,7 @@ namespace Importer2Web
             foreach (var s in configFile.Bridges)
             {
                 //Create
-                MsacBridge bridge = new MsacBridge(configFile, configFile.SystemConfig, s);
+                MsacBridge bridge = new MsacBridge(configFile, configFile.SystemConfig, s, assetStoreIcons, assetStoreCache);
 
                 //Add
                 AddStationToList(bridge);
@@ -66,7 +76,7 @@ namespace Importer2Web
         private void AddStationToList(MsacBridge bridge)
         {
             //Create the controller
-            MsacBridgeController controller = new MsacBridgeController(bridge);
+            MsacBridgeController controller = new MsacBridgeController(bridge, assetStoreIcons);
             controller.OnDeleted += Controller_OnDeleted;
 
             //Add it to the table
@@ -104,12 +114,12 @@ namespace Importer2Web
             {
                 Id = form.StationId
             };
-            BridgeConfigurationForm config = new BridgeConfigurationForm(MsacBridge.GetDefaultImagePath(configFile.SystemConfig, form.StationId), settings, true);
+            BridgeConfigurationForm config = new BridgeConfigurationForm(assetStoreIcons, settings, true);
             if (config.ShowDialog() != DialogResult.OK)
                 return;
 
             //Create and add
-            MsacBridge bridge = new MsacBridge(configFile, configFile.SystemConfig, settings);
+            MsacBridge bridge = new MsacBridge(configFile, configFile.SystemConfig, settings, assetStoreIcons, assetStoreCache);
             AddStationToList(bridge);
 
             //Save

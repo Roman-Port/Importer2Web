@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Importer2Web.Images;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,13 +15,15 @@ namespace Importer2Web
     {
         public delegate void DeletedEventArgs(MsacBridgeController controller);
 
-        public MsacBridgeController(MsacBridge bridge)
+        public MsacBridgeController(MsacBridge bridge, IWebImageCategory iconStore)
         {
             this.bridge = bridge;
+            this.iconStore = iconStore;
             InitializeComponent();
         }
 
         private readonly MsacBridge bridge;
+        private readonly IWebImageCategory iconStore;
 
         public MsacBridge Bridge => bridge;
 
@@ -40,8 +43,8 @@ namespace Importer2Web
         {
             //Set up defaults
             stationName.Text = bridge.BridgeConfig.Id;
-            previewIcon.ImageLocation = bridge.DefaultImage.FileName.FullName;
-            stationIcon.ImageLocation = bridge.DefaultImage.FileName.FullName;
+            previewIcon.ImageLocation = bridge.DefaultImage.LocalFile.FullName;
+            stationIcon.ImageLocation = bridge.DefaultImage.LocalFile.FullName;
 
             //Bind events
             bridge.OnUpdateStarted += Bridge_OnUpdateStarted;
@@ -65,11 +68,12 @@ namespace Importer2Web
                 statusText.BackColor = Color.FromArgb(128, 128, 255);
 
                 //Update text
-                previewArtist.Text = bridge.CurrentArtist;
-                previewTitle.Text = bridge.CurrentTitle;
+                PlayoutItem item = bridge.CurrentItem;
+                previewArtist.Text = item.Artist;
+                previewTitle.Text = item.Title;
 
                 //Update icon
-                previewIcon.ImageLocation = bridge.CurrentImage.FileName.FullName;
+                previewIcon.ImageLocation = item.Image.LocalFile.FullName;
             });
         }
 
@@ -95,7 +99,7 @@ namespace Importer2Web
         private void settingsBtn_Click(object sender, EventArgs e)
         {
             //Show dialog
-            BridgeConfigurationForm form = new BridgeConfigurationForm(MsacBridge.GetDefaultImagePath(bridge.SystemConfig, bridge.BridgeConfig.Id), bridge.BridgeConfig, false);
+            BridgeConfigurationForm form = new BridgeConfigurationForm(iconStore, bridge.BridgeConfig, false);
             switch (form.ShowDialog())
             {
                 case DialogResult.OK:

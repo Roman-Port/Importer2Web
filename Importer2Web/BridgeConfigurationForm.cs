@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Importer2Web.Clients;
+using Importer2Web.Gui.Configuration;
+using Importer2Web.Images;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,17 +17,18 @@ namespace Importer2Web
 {
     public partial class BridgeConfigurationForm : Form
     {
-        public BridgeConfigurationForm(FileInfo iconFilename, MsacBridgeConfig config, bool isNew)
+        public BridgeConfigurationForm(IWebImageCategory iconStore, MsacBridgeConfig config, bool isNew)
         {
-            this.iconFilename = iconFilename;
+            this.iconStore = iconStore;
             this.config = config;
             this.isNew = isNew;
             InitializeComponent();
         }
 
-        private readonly FileInfo iconFilename;
+        private readonly IWebImageCategory iconStore;
         private readonly MsacBridgeConfig config;
         private readonly bool isNew;
+        private readonly List<OutputConfigurationControl> outputs = new List<OutputConfigurationControl>();
 
         private void BridgeConfigurationForm_Load(object sender, EventArgs e)
         {
@@ -32,14 +36,11 @@ namespace Importer2Web
             Text += " (" + config.Id + ")";
 
             //Load
-            stationPort.Value = config.MsacPort;
-            if (!isNew)
-                stationIcon.ImageLocation = iconFilename.FullName;
-            cirrusEnabled.Checked = config.CirrusEnabled;
-            cirrusDomain.Text = config.CirrusDomain;
-            cirrusCallLetters.Text = config.CirrusCallLetters;
-            cirrusAuthToken.Text = config.CirrusAuthToken;
-            cirrusDefaultSongDuration.Value = config.CirrusDefaultDuration;
+            stationPort.Value = config.DataPort;
+            if (!isNew && iconStore.TryGetAsset(config.Id + ".jpg", out IWebImage img))
+                stationIcon.ImageLocation = img.LocalFile.FullName;
+            foreach (var o in config.Outputs)
+                AttachNewOutput(o);
 
             //If it's not new, disable some parts
             if (isNew)
@@ -51,13 +52,45 @@ namespace Importer2Web
             UpdateSubmitStatus();
         }
 
+        private void AttachNewOutput(MsacBridgeConfig.OutputConfig info)
+        {
+            //Resolve the guid to a registration
+            if (!info.TryResolve(out IOutputClientFactory client))
+                return;
+
+            //Make
+            OutputConfigurationControl item = new OutputConfigurationControl(client, info);
+            item.DeleteRequested += Item_DeleteRequested;
+            item.RevalidateRequested += UpdateSubmitStatus;
+            item.Configurator.SettingUpdated += Configurator_SettingUpdated;
+
+            //Add to internal list
+            outputs.Add(item);
+
+            //Insert at the end of view
+            contentPanel.Controls.Add(item.Control);
+            contentPanel.Controls.SetChildIndex(item.Control, 0);
+            UpdateSubmitStatus();
+        }
+
+        private void Item_DeleteRequested(OutputConfigurationControl obj)
+        {
+            outputs.Remove(obj);
+            contentPanel.Controls.Remove(obj.Control);
+            UpdateSubmitStatus();
+        }
+
+        private void Configurator_SettingUpdated()
+        {
+            UpdateSubmitStatus();
+        }
+
         private void UpdateSubmitStatus()
         {
-            btnSave.Enabled = File.Exists(iconFilename.FullName) &&
-                (
-                    !cirrusEnabled.Checked ||
-                    (cirrusCallLetters.Text.Length > 0 && cirrusAuthToken.Text.Length > 0)
-                );
+            bool ok = iconStore.TryGetAsset(config.Id + ".jpg", out IWebImage img);
+            foreach (var c in outputs)
+                ok = ok && c.Validate();
+            btnSave.Enabled = ok;
         }
 
         private void stationIconBtn_Click(object sender, EventArgs e)
@@ -72,19 +105,19 @@ namespace Importer2Web
             try
             {
                 //Open image
+                byte[] imgData;
                 using (Bitmap bmp = (Bitmap)Bitmap.FromFile(fd.FileName))
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    //Write to backup
-                    bmp.Save(iconFilename.FullName + ".bak", ImageFormat.Jpeg);
-
-                    //Move
-                    if (iconFilename.Exists)
-                        iconFilename.Delete();
-                    File.Move(iconFilename.FullName + ".bak", iconFilename.FullName);
+                    bmp.Save(ms, ImageFormat.Jpeg);
+                    imgData = ms.ToArray();
                 }
 
-                //Set
-                stationIcon.ImageLocation = iconFilename.FullName;
+                //Save
+                IWebImage img = iconStore.UploadAsset(config.Id + ".jpg", imgData);
+
+                //Apply in GUI
+                stationIcon.ImageLocation = img.LocalFile.FullName;
             } catch (Exception ex)
             {
                 MessageBox.Show("Failed to transcode image. Check the format.", "Updating Default Image", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -97,12 +130,10 @@ namespace Importer2Web
         private void btnSave_Click(object sender, EventArgs e)
         {
             //Apply changes
-            config.MsacPort = (int)stationPort.Value;
-            config.CirrusEnabled = cirrusEnabled.Checked;
-            config.CirrusDomain = cirrusDomain.Text;
-            config.CirrusCallLetters = cirrusCallLetters.Text;
-            config.CirrusAuthToken = cirrusAuthToken.Text;
-            config.CirrusDefaultDuration = (int)cirrusDefaultSongDuration.Value;
+            config.DataPort = (int)stationPort.Value;
+            config.Outputs = new List<MsacBridgeConfig.OutputConfig>();
+            foreach (var o in outputs)
+                config.Outputs.Add(o.Save());
 
             //Apply
             DialogResult = DialogResult.OK;
@@ -137,6 +168,93 @@ namespace Importer2Web
         {
             //Update button
             UpdateSubmitStatus();
+        }
+
+        private void btnAddOutput_Click(object sender, EventArgs e)
+        {
+            AttachNewOutput(new MsacBridgeConfig.OutputConfig
+            {
+                Guid = OutputClientRegistration.Outputs[0].Guid,
+                Config = new Newtonsoft.Json.Linq.JObject()
+            });
+        }
+
+        class OutputConfigurationControl
+        {
+            public OutputConfigurationControl(IOutputClientFactory client, MsacBridgeConfig.OutputConfig info)
+            {
+                //Set
+                this.client = client;
+
+                //Create the view to add
+                container = new GroupBox();
+                container.Dock = DockStyle.Top;
+                container.AutoSize = true;
+                container.Text = client.Name;
+
+                //Create the configurator and attach
+                configurator = client.CreateConfigurator(info.Config);
+                configurator.Control.Dock = DockStyle.Top;
+                container.Controls.Add(configurator.Control);
+
+                //Create standard header and attach
+                header = new OutputConfigHeader();
+                container.Controls.Add(header);
+                header.Dock = DockStyle.Top;
+                header.BtnDelete.Click += BtnDelete_Click;
+                header.CheckEnabled.Checked = info.Enabled;
+                header.CheckEnabled.CheckedChanged += CheckEnabled_CheckedChanged;
+
+                //Create the standard footer and attach
+                footer = new OutputConfigFooter();
+                container.Controls.Add(footer);
+                footer.Dock = DockStyle.Bottom;
+                footer.EnableSongs = info.ExportSongs;
+                footer.EnableSpots = info.ExportSpots;
+                footer.EnableOther = info.ExportOther;
+            }
+
+            private readonly GroupBox container;
+            private readonly OutputConfigHeader header;
+            private readonly OutputConfigFooter footer;
+
+            private readonly IOutputClientFactory client;
+            private readonly IOutputClientConfigurator configurator;
+
+            public IOutputClientFactory Factory => client;
+            public IOutputClientConfigurator Configurator => configurator;
+            public Control Control => container;
+
+            public event Action<OutputConfigurationControl> DeleteRequested;
+            public event Action RevalidateRequested;
+
+            public bool Validate()
+            {
+                return !header.CheckEnabled.Checked || configurator.ValidateForm();
+            }
+
+            public MsacBridgeConfig.OutputConfig Save()
+            {
+                return new MsacBridgeConfig.OutputConfig
+                {
+                    Guid = client.Guid,
+                    Enabled = header.CheckEnabled.Checked,
+                    Config = configurator.Save(),
+                    ExportSongs = footer.EnableSongs,
+                    ExportSpots = footer.EnableSpots,
+                    ExportOther = footer.EnableOther
+                };
+            }
+
+            private void CheckEnabled_CheckedChanged(object sender, EventArgs e)
+            {
+                RevalidateRequested?.Invoke();
+            }
+
+            private void BtnDelete_Click(object sender, EventArgs e)
+            {
+                DeleteRequested?.Invoke(this);
+            }
         }
     }
 }
