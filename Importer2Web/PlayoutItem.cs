@@ -9,7 +9,7 @@ namespace Importer2Web
 {
     public class PlayoutItem
     {
-        public PlayoutItem(string artist, string title, string id, string type, int duration, IWebImage image)
+        public PlayoutItem(string artist, string title, string id, PlayoutItemType type, int duration, IWebImage image)
         {
             this.artist = artist;
             this.title = title;
@@ -22,14 +22,14 @@ namespace Importer2Web
         private readonly string artist;
         private readonly string title;
         private readonly string id;
-        private readonly string type;
+        private readonly PlayoutItemType type;
         private readonly int duration;
         private readonly IWebImage image;
 
         public string Artist => artist;
         public string Title => title;
         public string Id => id;
-        public string Type => type;
+        public PlayoutItemType Type => type;
         public int Duration => duration;
         public IWebImage Image => image;
 

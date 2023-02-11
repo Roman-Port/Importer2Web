@@ -15,24 +15,32 @@ namespace Importer2Web.Gui.Configuration
         public OutputConfigFooter()
         {
             InitializeComponent();
+            checks.Add(new KeyValuePair<PlayoutItemType, CheckBox>(PlayoutItemType.Song, checkSongs));
+            checks.Add(new KeyValuePair<PlayoutItemType, CheckBox>(PlayoutItemType.Speech, checkSpeech));
+            checks.Add(new KeyValuePair<PlayoutItemType, CheckBox>(PlayoutItemType.Spot, checkSpots));
+            checks.Add(new KeyValuePair<PlayoutItemType, CheckBox>(PlayoutItemType.Link, checkLinks));
+            checks.Add(new KeyValuePair<PlayoutItemType, CheckBox>(PlayoutItemType.Other, checkOther));
         }
 
-        public bool EnableSongs
-        {
-            get => checkSongs.Checked;
-            set => checkSongs.Checked = value;
-        }
+        private readonly List<KeyValuePair<PlayoutItemType, CheckBox>> checks = new List<KeyValuePair<PlayoutItemType, CheckBox>>();
 
-        public bool EnableSpots
+        public PlayoutItemType EnableTypes
         {
-            get => checkSpots.Checked;
-            set => checkSpots.Checked = value;
-        }
-
-        public bool EnableOther
-        {
-            get => checkOther.Checked;
-            set => checkOther.Checked = value;
+            get
+            {
+                PlayoutItemType result = PlayoutItemType.None;
+                foreach (var c in checks)
+                {
+                    if (c.Value.Checked)
+                        result |= c.Key;
+                }
+                return result;
+            }
+            set
+            {
+                foreach (var c in checks)
+                    c.Value.Checked = (value & c.Key) == c.Key;
+            }
         }
     }
 }

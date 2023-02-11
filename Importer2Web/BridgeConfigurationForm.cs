@@ -172,9 +172,23 @@ namespace Importer2Web
 
         private void btnAddOutput_Click(object sender, EventArgs e)
         {
+            //Build and show menu
+            addExportMenu.Items.Clear();
+            foreach (var r in OutputClientRegistration.Outputs)
+            {
+                ToolStripMenuItem item = new ToolStripMenuItem(r.Name);
+                item.Tag = r;
+                item.Click += AddOutputItem_Click;
+                addExportMenu.Items.Add(item);
+            }
+            addExportMenu.Show(Cursor.Position);
+        }
+
+        private void AddOutputItem_Click(object sender, EventArgs e)
+        {
             AttachNewOutput(new MsacBridgeConfig.OutputConfig
             {
-                Guid = OutputClientRegistration.Outputs[0].Guid,
+                Guid = ((sender as ToolStripMenuItem).Tag as IOutputClientFactory).Guid,
                 Config = new Newtonsoft.Json.Linq.JObject()
             });
         }
@@ -209,9 +223,7 @@ namespace Importer2Web
                 footer = new OutputConfigFooter();
                 container.Controls.Add(footer);
                 footer.Dock = DockStyle.Bottom;
-                footer.EnableSongs = info.ExportSongs;
-                footer.EnableSpots = info.ExportSpots;
-                footer.EnableOther = info.ExportOther;
+                footer.EnableTypes = info.ExportTypes;
             }
 
             private readonly GroupBox container;
@@ -240,9 +252,7 @@ namespace Importer2Web
                     Guid = client.Guid,
                     Enabled = header.CheckEnabled.Checked,
                     Config = configurator.Save(),
-                    ExportSongs = footer.EnableSongs,
-                    ExportSpots = footer.EnableSpots,
-                    ExportOther = footer.EnableOther
+                    ExportTypes = footer.EnableTypes
                 };
             }
 

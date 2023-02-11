@@ -19,9 +19,7 @@ namespace Importer2Web
             public bool Enabled { get; set; } = true;
             public string Guid { get; set; }
             public JObject Config { get; set; } = new JObject();
-            public bool ExportSongs { get; set; } = true;
-            public bool ExportSpots { get; set; } = false;
-            public bool ExportOther { get; set; } = false;
+            public PlayoutItemType ExportTypes { get; set; } = PlayoutItemType.Song | PlayoutItemType.Spot | PlayoutItemType.Other;
 
             public bool TryResolve(out IOutputClientFactory client)
             {

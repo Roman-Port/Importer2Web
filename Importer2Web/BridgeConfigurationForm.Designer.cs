@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label2 = new System.Windows.Forms.Label();
             this.stationIconBtn = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -38,6 +39,7 @@
             this.btnDelete = new System.Windows.Forms.Button();
             this.contentPanel = new System.Windows.Forms.Panel();
             this.btnAddOutput = new System.Windows.Forms.Button();
+            this.addExportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.stationPort)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.stationIcon)).BeginInit();
@@ -73,7 +75,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(269, 178);
+            this.groupBox1.Size = new System.Drawing.Size(341, 178);
             this.groupBox1.TabIndex = 5;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "General Settings";
@@ -94,7 +96,7 @@
             0,
             0});
             this.stationPort.Name = "stationPort";
-            this.stationPort.Size = new System.Drawing.Size(254, 20);
+            this.stationPort.Size = new System.Drawing.Size(326, 20);
             this.stationPort.TabIndex = 6;
             this.stationPort.Value = new decimal(new int[] {
             7777,
@@ -124,9 +126,9 @@
             // btnSave
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(182, 422);
+            this.btnSave.Location = new System.Drawing.Point(235, 525);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(99, 23);
+            this.btnSave.Size = new System.Drawing.Size(118, 23);
             this.btnSave.TabIndex = 8;
             this.btnSave.Text = "Save";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -134,8 +136,8 @@
             // 
             // btnDelete
             // 
-            this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDelete.Location = new System.Drawing.Point(12, 422);
+            this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnDelete.Location = new System.Drawing.Point(12, 525);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(75, 23);
             this.btnDelete.TabIndex = 9;
@@ -152,25 +154,30 @@
             this.contentPanel.Controls.Add(this.groupBox1);
             this.contentPanel.Location = new System.Drawing.Point(12, 12);
             this.contentPanel.Name = "contentPanel";
-            this.contentPanel.Size = new System.Drawing.Size(269, 404);
+            this.contentPanel.Size = new System.Drawing.Size(341, 507);
             this.contentPanel.TabIndex = 10;
             // 
             // btnAddOutput
             // 
             this.btnAddOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAddOutput.Location = new System.Drawing.Point(93, 422);
+            this.btnAddOutput.Location = new System.Drawing.Point(126, 525);
             this.btnAddOutput.Name = "btnAddOutput";
-            this.btnAddOutput.Size = new System.Drawing.Size(83, 23);
+            this.btnAddOutput.Size = new System.Drawing.Size(103, 23);
             this.btnAddOutput.TabIndex = 11;
             this.btnAddOutput.Text = "Add Output";
             this.btnAddOutput.UseVisualStyleBackColor = true;
             this.btnAddOutput.Click += new System.EventHandler(this.btnAddOutput_Click);
             // 
+            // addExportMenu
+            // 
+            this.addExportMenu.Name = "addExportMenu";
+            this.addExportMenu.Size = new System.Drawing.Size(61, 4);
+            // 
             // BridgeConfigurationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(293, 457);
+            this.ClientSize = new System.Drawing.Size(365, 560);
             this.Controls.Add(this.btnAddOutput);
             this.Controls.Add(this.contentPanel);
             this.Controls.Add(this.btnDelete);
@@ -200,5 +207,6 @@
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Panel contentPanel;
         private System.Windows.Forms.Button btnAddOutput;
+        private System.Windows.Forms.ContextMenuStrip addExportMenu;
     }
 }

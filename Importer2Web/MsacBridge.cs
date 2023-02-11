@@ -41,7 +41,7 @@ namespace Importer2Web
             foreach (var o in bridgeConfig.Outputs)
             {
                 if (o.TryResolve(out IOutputClientFactory outputFactory))
-                    outputs.Add(outputFactory.CreateOutputClient(o.Config));
+                    outputs.Add(new LoadedExporter(o, outputFactory.CreateOutputClient(o.Config)));
             }
 
             //Start server
@@ -65,7 +65,7 @@ namespace Importer2Web
         private readonly AimServer server;
         private readonly bool serverReady;
         private readonly IWebImage defaultIcon;
-        private readonly List<IOutputClient> outputs = new List<IOutputClient>();
+        private readonly List<LoadedExporter> outputs = new List<LoadedExporter>();
 
         private volatile PlayoutItem currentItem;
 
@@ -107,8 +107,13 @@ namespace Importer2Web
                 image = storeCache.UploadAsset(imageData);
             }
 
+            //Parse the type
+            PlayoutItemType type;
+            if (!Enum.TryParse(item.Type, out type))
+                type = PlayoutItemType.Other;
+
             //Set metadata
-            currentItem = new PlayoutItem(item.Artist, item.Title, item.Id, item.Type, item.DurationParsed, image);
+            currentItem = new PlayoutItem(item.Artist, item.Title, item.Id, type, item.DurationParsed, image);
 
             //Log
             MsacLogger.Log(MsacLogger.LogLevel.Info, bridgeConfig.Id, "Sending update: " + currentItem.ToDebugString());
@@ -122,7 +127,7 @@ namespace Importer2Web
             {
                 try
                 {
-                    o.SendUpdate(currentItem);
+                    o.ExportFiltered(currentItem);
                 }
                 catch
                 {
@@ -133,6 +138,26 @@ namespace Importer2Web
 
             //Send success event
             OnUpdateFinished?.Invoke(this, success);
+        }
+
+        class LoadedExporter
+        {
+            public LoadedExporter(MsacBridgeConfig.OutputConfig config, IOutputClient client)
+            {
+                this.config = config;
+                this.client = client;
+            }
+
+            private readonly MsacBridgeConfig.OutputConfig config;
+            private readonly IOutputClient client;
+
+            public string Name => client.Name;
+
+            public void ExportFiltered(PlayoutItem item)
+            {
+                if ((item.Type & config.ExportTypes) == item.Type)
+                    client.SendUpdate(item);
+            }
         }
     }
 }
